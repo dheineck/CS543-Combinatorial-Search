@@ -1,0 +1,20 @@
+David Heineck
+CS543
+Tents
+
+This Tent-matching solver was implemented with a basic recursive depth-first search, including a few performance optimizations.  This implementation is structured by setting the campers as the variables and the assigned tent as the value.  At the onset, each camper is placed in a list of campers, and the tents are placed in a list of tents.  The program sequentially progresses across the list of campers.  At each camper, a tent is chosen, and a new recursive search is called for the next camper.  Each camper is represented by a Camper object containing the camper's identification number, it's set of preferences for the other campers, the total sum of this camper's preferences, as well as the number of the tent that is currently assigned.  The tent is represented by a Tent object containing the tent ID number, the max capacity, a list of current occupants, a the current score for that tent.  There is also a state object that represents the state of individual nodes during the search.  The State contains a list of available campers, a list of assigned campers, a list of tents with spots open, a list of full tents, as well as the current score at this state.
+
+The optimizations do most of the real work in this program.  The optimizations that had the most imact were the depth-first branch and bound and the heuristic pre-sort.  Other optimizations are a backwards heuristic pre-sort, symmetry breaking, and best-fit (instead of first fit).  Without optimizations, the recursive search method processes campers in the input file order, and assigns a tent in order according to the lowest tent ID number.  When a tent is filled, it is no longer available for assignment.  Once a leaf is reached, the state with the highest score is returned.
+
+The heuristic pre-sort sorts the list of campers according to the sum of their individiual preferences.  Campers with the lowest scores are processed and are assigned to the smallest tents first.  The intent is to get rid of the most-constrained variables first and spend the most time rearranging higher-value combinations in the larger tents.  The depth-first branch and bound uses calculates a estimate score by calculating the score for a single 'tent' with all the availbable campers, as well as filling in all open tent positions with the maximum possible score for an open tent position (24 in this case).  If the score of the (large tent + the open tent positions + the current score) < the target score of 175, then this branch is discarded and the search moves to the next available tent.  
+
+The backwards heuristic search placed the higher-preference campers in the larger tents first, and never arrived a solution (nor scores in the 160s) in the alotted time.  Best fit didn't seem to perform with any perceptible difference than first-fit (with the smallest to largest tent heuristic).  Best fit was calculated by the tent that scored the highest when the camper was assigned to that tent.  I was not able to get a symmetry breaking method to work.
+
+
+Lessons learned and how it performed:
+
+I was able to find a 175 solution by only using the heuristic pre-sort, but it took roughly 45 minutes.  It only took a couple minutes once the DFBnB was applied.  I was not able to find a solution greater than 175, and my guess is that one doesn't exist.
+
+Once I figured out my data structures and program organization, I started really enjoying this problem.  I spent a lot of time trying to wrestle with the symmetry breaking (with no success), but the DFBnB was a fairly crude, easy-to-implement, and surprisingly effective approach.  I relied intuitively on the graph coloring and chalk problems when coming up with the pre-sort and constrained variables heuristic.  
+
+If I were to spend more time with this, I would like to clean up my data structures to improve performance.  I suspect there's quite a bit of slowdown with all the overhead associated with my stacks, as well as creating deep copies & new state objects for each node.  My sorts are quadratic and they can be fairly easily improved. 

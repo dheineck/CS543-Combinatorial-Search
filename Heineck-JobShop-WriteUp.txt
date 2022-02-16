@@ -1,0 +1,24 @@
+﻿David Heineck
+CS543
+Job Shop
+
+This JobShop solver was implemented with a basic recursive depth-first search, including a few performance optimizations.  This implementation is structured by setting the (machine, time) pair  as the variable and the assigned job as the value.  At each time step where a machine is available for assignment, a list of available machines and a list of available jobs for each machine is generated.  For each machine, a job is chosen, and a recursive search is called from this state.  Once all machines have been assigned jobs at a particular time step, the next time step is selected where there are available machines, and another recursive search is called.  The search ends once all the job task assignments have been filled, and the best time span is recorded.  There is a state object that represents the state of individual nodes during the search.  The State contains a the current schedule, current time step, current time span, a list of pointers to the current task for each job, a list of times when each machine will become available, a list of times when each job will become available, as well as a list of the remaining (machine, duration) task pairs for each job.   
+
+The optimizations do much of the real work in this program.  The optimizations that had the most impact were the depth-first branch and bound, a de-duplication of already-visited states, a discrepancy budget, and a heuristic sort for variable selection.  Each of these optimizations provided cumulative improvements to performance.  Without optimizations, a complete search is performed on every node in the graph.
+
+Depth-first branch and bound calculates a heuristic score by calculating the aggregate time for all remaining tasks in each job (without gaps) and adding this to the time already elapsed.  If the longest-duration estimate is greater than the best time span, this branch is pruned. 
+
+A simple hash table is implemented to reduce duplicate paths.  The hash code for each state is calculated by taking the hash code of the current schedule array and summing it with the hash code of the current time-of-the-next-available-machine array.  These two arrays uniquely identify states in all practicality. The hash table is currently implemented to hold 250,000 elements, where the element itself is the time-of-the-next-available-machine array.  When a collision occurs, if the arrays are the same then the states are considered to be the same, and the branch is pruned.  If the arrays are not equal, then the new array overwrites the preexisting, and the branch is not pruned.  Over time, old states are replaced with more recent states, and processing performance is maintained.  
+
+The discrepancy budget binds the state space such that, the only leaf nodes that can be reached are those where n alternate branches are taken from the heuristic choice, where n is a budget of these discrepancies.  The last optimization is a heuristic sort for available jobs that can be assigned to a machine.  If there is more than one job, then those jobs are ordered by whichever has been assigned fewer tasks.    
+
+
+
+Lessons learned and how it performed:
+
+It took quite some time for me to refine my recursive search for this problem.  My initial attempts created an explosion of recursions, and I'm still not certain if my current solution is or is not grossly inefficient from a recursive standpoint.  
+
+By cumulatively stacking my optimizations, I was able to significantly reduce the amount of time to find reasonably short time spans.  For the output generated here, I only let each search run for 15 seconds.  For most instances, this was sufficient time to generate a sufficient solution.  For many instances better solutions could be found after 90 seconds, but typically no improved solutions were found after 120 seconds. 
+
+I think the area that could benefit most is the order in which jobs are assigned to machines.  Currently, there is no heuristic that considers the duration of a task, and if longer duration tasks should be moved up or back in the schedule.
+
